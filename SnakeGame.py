@@ -432,7 +432,7 @@ while True:
             # Uncomment for manual control:
             game.direction = move_keyboard(game, event)
 
-    #game.direction = move_tutorial_1(game)
+    game.direction = move_tutorial_1(game)
 
     # Log the current game state in ARFF format.
     log_buffer.append(print_line_data(game))

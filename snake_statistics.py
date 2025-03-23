@@ -291,7 +291,7 @@ class GameState:
         self.score = 0
         self.max_score = 0  # Tracks the highest score reached during the simulation.
 
-def run_simulation(model_path, dataset_path, max_steps=10000, function=1):
+def run_simulation(model_path, dataset_path, max_steps=25000, function=1):
     """
     Runs a single simulation of the snake game using the given model and dataset.
     Tracks both the final score and the maximum score achieved.
@@ -454,22 +454,21 @@ if __name__ == "__main__":
     # Ensure that the indices match (i.e. model_paths[i] uses dataset_paths[i]).
     model_paths = [
         "./Final_models/binary/j48.model",
-        "./Final_models/binary/ibk_5.model",
-        "./Final_models/binary/ibk_10.model",
-        "./Final_models/binary/logistic.model"#,
+        "./Final_models/extended/j48.model",
+        "./Final_models/extended/ibk_5.model",
+        #"./Final_models/binary/ibk_10.model",
+        #"./Final_models/binary/logistic.model"#,
         #"./Final_models/binary/random.model"
     ]
 
     fuctions = [1, 2, 2]
 
-    model_names = ["j48", "ibk_5", "ibk_10", "logistic"]
+    model_names = ["j48", "extended j48", "extended ibk 5"]
 
     dataset_paths = [
         "./Arffs/noiceless_pruned.arff",
-        "./Arffs/noiceless_pruned.arff",
-        "./Arffs/noiceless_pruned.arff",
-        "./Arffs/noiceless_pruned.arff"#,
-        #"./Arffs/noiceless_pruned.arff"
+        "./Arffs/clean_extended_pruned.arff",
+        "./Arffs/clean_extended_pruned.arff"
     ]
 
     # Set the number of simulation runs for statistical significance.

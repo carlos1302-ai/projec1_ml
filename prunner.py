@@ -95,13 +95,13 @@ def prune_arff_instances(input_filename, output_filename, cell_size=10):
     for dline in data_lines:
         instance = [x.strip() for x in dline.split(",")]
         # Ensure instance has the expected number of attributes (13 in this case)
-        if len(instance) < 13:
+        if len(instance) < 20:
             continue
         num_total += 1
 
         # Compute correct candidate directions
         candidates = get_correct_candidates(instance, cell_size=cell_size)
-        chosen_direction = instance[12]
+        chosen_direction = instance[19]
 
         # If there are safe candidate moves, keep the instance only if the chosen move is among them.
         # If no candidates could be computed (e.g. all adjacent moves blocked), keep the instance.
@@ -124,4 +124,4 @@ def prune_arff_instances(input_filename, output_filename, cell_size=10):
 
 
 # Example usage:
-prune_arff_instances("Arffs/test_pruned.arff", "Arffs/clean_test_pruned.arff")
+prune_arff_instances("Arffs/extended_binary.arff", "Arffs/clean_extended.arff")

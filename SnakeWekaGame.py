@@ -70,11 +70,11 @@ def get_instance_attributes(game):
         left_occ,
         up_occ,
         right_occ,
-        down_occ,
-        dist_left,
-        dist_up,
-        dist_right,
-        dist_down
+        down_occ#,
+        #dist_left,
+        #dist_up,
+        #dist_right,
+        #dist_down
         #score,
         #manhattan_distance
     ]
@@ -479,7 +479,7 @@ while True:
     # Uncomment the next line to use the AI move function.
     x = get_instance_attributes(game)
     #print("X:", x)
-    weka_direction = weka.predict("./Models/j48_objects.model", x, "./Arffs/distance.arff")
+    weka_direction = weka.predict("./Final_models/heuristic_trained/ibk_5.model", x, "./Arffs/tutorial_pruned_cleaned.arff")
     #print(weka_direction)
     game.direction = weka_direction
     #game.direction = move_tutorial_1(game)
@@ -534,6 +534,6 @@ while True:
             game_over(game)
 
     show_score(game, 1, WHITE, "consolas", 15)
-    #pygame.display.update()
+    pygame.display.update()
     fps_controller.tick(DIFFICULTY)
 

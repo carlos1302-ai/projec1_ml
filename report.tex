@@ -308,7 +308,7 @@ We can see their base performance in the following image:
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.6\textwidth]{./images/binary_comparaison.png} %%% Change this
+    \includegraphics[width=0.9\textwidth]{./images/main_models.png} %%% Change this
     \caption{Game Performance of the Automatic Agent}
     \label{fig:game}
 \end{figure}
@@ -331,15 +331,60 @@ This could also easily be deduced, as the models are only trained with the curre
 If we were to include more parameters, as the exact position of the snake, or the position of the walls, the model could learn to avoid enclosing itself,
 howerver this would make the model more complex, possible leading to overfitting, and would make the model harder to train.
 
+This could be a very interesting point to explore in future work, as it could lead to a more robust model, that could be able to play the game in a more human-like way.
+However for this task in particular a reinforcment learning approach could be more suitable, as it would allow the model to learn from the consequences of its actions, and not only from the current state of the game.
+
+We deduced that maybe if we gave it more informaiton about it's surroundings, it could learn to avoid enclosing itself.
+We settled on the second model we implemented in the first phase. 
+We ran some tests with this model, and that even if it had a similar performance, it was actually slightly worse than the best model we had.
+Maybe because we aren't actually giving the model the information it needs to avoid enclosing itself, or maybe because the model is too simple to learn this concept.
+Even if it's a simple model, we increase slightly the complexity, making it perform slightly worse than out previous model.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.9\textwidth]{./images/extended.png} %%% Change this
+    \caption{Game Performance of the Automatic Agent vs the Heuristic Agent}
+    \label{fig:game}
+\end{figure}
 
 
-\subsection{Discussion}
+\subsection{Model comparaison against the heuristic agent}
 
-The integration of Weka into our game framework provides significant flexibility. By simply changing the model file passed to the \texttt{weka.predict()} function, different classifiers can be evaluated and compared. This allows for an iterative process of model improvement, where adjustments to the training data, feature selection, and classifier parameters can be directly assessed through the performance of the agent in the game.
+We also compared the performance of the automatic agent against the heuristic agent we implemented in the first tutorial.
+We can find the results in the following image:
 
-Furthermore, the real-time predictions highlight the critical role of quality training data and effective data pre-processing. The improvements made in Phase 1 (through careful feature extraction and instance pruning) and Phase 2 (through extensive pre-processing and classifier evaluation) directly contribute to the enhanced performance of the automatic agent.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.9\textwidth]{./images/heuristic.png} %%% Change this
+    \caption{Game Performance of the Automatic Agent vs the Heuristic Agent}
+    \label{fig:game}
+\end{figure}
 
-In conclusion, this phase successfully demonstrates the connection between our machine learning model and the Snake game, forming a solid foundation for future improvements in autonomous decision-making and overall agent strategy.
+As we can see the automatic agent has a way worse performance than the heuristic agent. 
+This is mainly as we took great care in the heuristic agent to avoid the snake enclosing itself.
+
+As they both present a similar performance if we were to not increase the lenght of the snake. 
+However as the lenght of the body increases where the heuristic agent can keep track of it, 
+mainly by analysing at each step if taking any action would lead to the snake enclosing itself.
+
+Another key difference is the speed of the agents, as the heuristic agent is way faster than the automatic agent.
+As the test for both agents took around the same time, whereas the heuristica agent was able to have games 10 times longers
+
+
+\subsection{Human vs. Automatic Agent Training Performance}
+
+We also compared the performance of our models if they were trained by a human player or by the automatic agent.
+All the following results were obtained using the binary attributes, and the cleaned instances.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.9\textwidth]{./images/heuristic_training.png} %%% Change this
+    \caption{Game Performance of the Human Agent vs the Automatic Agent}
+    \label{fig:game}
+\end{figure}
+
+We can clearly see that the models trained by the heuristic agent have a better performance than the models trained by the automatic agent.
+this will be further explored in the questions section.
 
 
 
@@ -352,25 +397,39 @@ We experimented with at least two regression algorithms, such as linear regressi
 
 \section{Questions}
 \subsection*{1. Difference between Human-Controlled and Automatic Agents}
-The primary difference lies in the variability and suboptimality of human decisions. Human-controlled instances often include mistakes and inconsistent strategies, whereas an automatic agent, once properly trained, can consistently apply the learned policy. This leads to differences in both classification accuracy and overall game performance.
+The primary difference lies in the variability and suboptimality of human decisions. 
+Human-controlled instances often include mistakes and inconsistent strategies, whereas an automatic agent, once properly trained, can consistently apply the learned policy. 
+This leads to differences in both classification accuracy and overall game performance.
+
+Even if we removed most of the mistakes from the instances, the human player still makes suboptimal decisions,
+and has a very simplistic strategy, mainly going directly to the food, and only changing direction when it is blocked.
+However as the heuristic agent uses Hilber curves to decrease the changes of enclosing itself, it has a more complex strategy, and is able to play the game for longer periods of time.
+The model could (and did) pick up some of this strategy, even if imperfectly, improving the performance of the automatic agent.
+
+
 
 \subsection*{2. Transforming Regression to Classification}
-To transform the regression task (predicting the score) into a classification task, the continuous score values can be discretized into bins or ranges. For example, one could classify the expected score change as \texttt{high increase}, \texttt{moderate increase}, \texttt{no change}, or \texttt{decrease}. Such discretization could have practical applications in designing adaptive difficulty or reward mechanisms in games.
+To transform the regression task (predicting the score) into a classification task, the continuous score values can be discretized into bins or ranges. 
+For example, one could classify the expected score change as \texttt{high increase}, \texttt{moderate increase} or \texttt{decrease}. 
+Even if in reality the score can only decrease by one or increase by 100, 
+we also introduce the \texttt{moderate increase} class, to let the model be able to 
+Such discretization could have practical applications in designing adaptive difficulty or reward mechanisms in games.
 
 \subsection*{3. Advantages of Predicting Score over Classifying Action}
 Predicting the score provides a quantitative measure of the agent’s performance and allows for the evaluation of long-term strategies. In contrast, classifying the action only addresses immediate decisions. A regression model for score prediction can help refine the agent’s overall strategy by correlating certain moves with higher future rewards.
 
 \subsection*{4. Incorporating an Attribute for Score Drop}
-Including an attribute that indicates whether the current score has dropped may further improve model performance. This attribute could help the model learn to recognize risky situations, potentially leading to strategies that avoid moves likely to incur penalties.
-
-\section{Files to Submit}
-The submission will include:
+Including an attribute that indicates whether the current score most likely  wouldn't improve performance, mainly becuase of two reasons:
 \begin{itemize}
-    \item The final report PDF.
-    \item All generated datasets (training and testing ARFF files).
-    \item The classification and regression models produced in Weka.
-    \item The source code of the automatic agent.
+    \item \textbf{Complexity:} Adding a new attribute could increase the model's complexity and the dimensionality of the feature space, potentially leading to overfitting.
+    \item \textbf{Redundancy:} When traing the model we would have much more instances where the score would drop, as it drops by one for each step the snake doesn't eat the food. While eating the food is a "rare" event.
 \end{itemize}
+As almost all the instances would have a score drop,
+the distribution of the classes would be almost uniform, inside this attribute, not really adding any information to the model.
+
+
+
+
 
 \section{Conclusions}
 In this assignment, we successfully applied machine learning techniques to both classify the next action in a Snake game and predict future scores. Our iterative process involved careful instance collection, data pre-processing (including instance pruning), and the integration of Weka models into the game environment. While the automatic agent shows promising improvements over manual control, further work is required to handle more dynamic and complex in-game situations. The experiments conducted provided valuable insights into the advantages and challenges of applying machine learning to real-time decision-making in games.
@@ -378,9 +437,15 @@ In this assignment, we successfully applied machine learning techniques to both 
 \vspace{1em}
 \noindent\textbf{Future Work:} Future research could explore more advanced reinforcement learning techniques, incorporate additional sensory attributes, and experiment with ensemble methods for both classification and regression tasks.
 
+
+\newpage
 \section{Appendix}
 
 \subsection{Code Listings}
+
+You can find the full code for the project in the following link:
+\href{https://github.com/carlos1302-ai/projec1_ml}{Project Code Repository}
+
 
 \subsubsection{Feature Extraction Function}
 \label{sec:feature-extraction}
@@ -515,51 +580,6 @@ The following code snippet demonstrates the implementation of the \texttt{flush\
 
 \end{verbatim}
 
-
-
-
-
-\subsection{Additional Tables and Figures}
-
-\subsubsection{Classifier Performance Table}
-Table~\ref{tab:results} summarizes the performance of the classifiers used in Phase 2.
-
-\begin{table}[ht]
-\centering
-\caption{Classification Performance Comparison}
-\label{tab:results}
-\begin{tabular}{lcc}
-\hline
-\textbf{Classifier} & \textbf{Training CCI (\%)} & \textbf{Testing CCI (\%)} \\ \hline
-J48               & 95.2                       & 93.8                     \\
-NaiveBayes        & 90.1                       & 88.3                     \\
-k-NN              & 92.3                       & 90.0                     \\
-Random Forest     & 97.0                       & 95.5                     \\ \hline
-\end{tabular}
-\end{table}
-
-\subsubsection{ARFF File Example}
-Below is an example of the ARFF file structure used for training and testing:
-
-\begin{verbatim}
-@relation snake_game-weka.filters.unsupervised.attribute.Remove-R13-14
-@attribute head_x numeric
-@attribute head_y numeric
-@attribute food_x numeric
-@attribute food_y numeric
-@attribute food_left numeric
-@attribute food_up numeric
-@attribute food_right numeric
-@attribute food_down numeric
-@attribute left_occ numeric
-@attribute up_occ numeric
-@attribute right_occ numeric
-@attribute down_occ numeric
-@attribute direction {UP,DOWN,LEFT,RIGHT}
-@data
-100,50,160,250,0,0,1,1,1,0,0,0,RIGHT
-110,50,160,250,0,0,1,1,1,0,0,0,RIGHT
-\end{verbatim}
 
 
 \end{document}
