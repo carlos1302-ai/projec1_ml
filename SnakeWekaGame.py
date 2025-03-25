@@ -479,7 +479,7 @@ while True:
     # Uncomment the next line to use the AI move function.
     x = get_instance_attributes(game)
     #print("X:", x)
-    weka_direction = weka.predict("./Final_models/heuristic_trained/ibk_5.model", x, "./Arffs/tutorial_pruned_cleaned.arff")
+    weka_direction = weka.predict("./Final_models/heuristic_trained/j48.model", x, "./Arffs/tutorial_pruned_cleaned.arff")
     #print(weka_direction)
     game.direction = weka_direction
     #game.direction = move_tutorial_1(game)

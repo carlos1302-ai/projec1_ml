@@ -6,6 +6,7 @@
 \usepackage{hyperref}
 \usepackage{geometry}
 \usepackage{setspace}
+\usepackage{booktabs}
 \usepackage{amsmath}
 \geometry{a4paper, margin=1in}
 \onehalfspacing
@@ -389,11 +390,68 @@ this will be further explored in the questions section.
 
 
 \section{Phase 4: Prediction}
-\subsection{Regression Model for Score Prediction}
-Beyond action classification, our assignment also required us to build a regression model to predict the game score in the next tick. The regression model uses similar state attributes along with the performed action as inputs, and the target variable is the score at the following tick.
 
-\subsection{Experimental Setup and Results}
-We experimented with at least two regression algorithms, such as linear regression and M5P (model trees), to determine which could better predict the incremental score changes. Pre-processing steps similar to those in Phase 2 were applied. The evaluation metrics included mean absolute error and root mean squared error. A detailed analysis of the performance across different algorithms helped us to understand the sensitivity of the score prediction task and guided us in selecting the final model.
+In this phase, we explore regression techniques to predict the snake's next game score based on the current game state and performed action. The objective is to estimate the score at the following tick using regression algorithms available in Weka.
+
+\subsection{Regression Model for Score Prediction}
+
+For score prediction, we use a dataset comprising 10,570 instances with the following relevant attributes:
+\begin{itemize}
+    \item \textbf{food\_left, food\_up, food\_right, food\_down:} Binary indicators representing the relative direction of the food.
+    \item \textbf{score:} The current score at prediction time.
+    \item \textbf{next\_score:} The target value representing the score in the next tick.
+\end{itemize}
+
+Data preprocessing was performed in a similar way to Phase 2, filtering out attributes not available at decision time. Two regression models were trained:
+\begin{enumerate}
+    \item \textbf{LinearRegression:} Configured with parameters \texttt{-S 0 -R 1.0E-8 -num-decimal-places 4}. This model uses the four food direction indicators together with the current score.
+    \item \textbf{SimpleLinearRegression:} This model is based solely on the current score.
+\end{enumerate}
+
+\subsection{Linear Regression Results}
+
+The LinearRegression model learned the following relationship:
+\[
+\hat{next\_score} = -0.029\cdot \texttt{food\_left} - 0.0264\cdot \texttt{food\_up} 
+- 0.0295\cdot \texttt{food\_right} - 0.026\cdot \texttt{food\_down} 
++ 0.9996\cdot \texttt{score} + 6.901.
+\]
+
+The performance metrics for both models are summarized in Tables~\ref{tab:train_pred} and~\ref{tab:test_pred}.
+
+
+\begin{table}[ht]
+    \caption{Training Performance Comparison}
+    \label{tab:train_pred}
+    \begin{tabular}{lcc}
+        \toprule
+        Metric & LinearRegression & SimpleLinearRegression \\
+        \midrule
+        Correlation Coefficient & 0.9996 & 0.9995 \\
+        Mean Absolute Error (MAE) & 6.1257 & 5.2088 \\
+        Root Mean Squared Error (RMSE) & 15.8285 & 16.2186 \\
+        Relative Absolute Error & 1.3995\% & 1.19\% \\
+        Root Relative Squared Error & 2.9532\% & 3.026\% \\
+        Total Instances & 10,570 & 10,570 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Discussion}
+
+The regression experiments reveal that predicting the next score is predominantly governed by the current score. The high correlation coefficients (close to 1) indicate a nearly perfect linear dependency between \texttt{score} and \texttt{next\_score}. The added food direction features provide only marginal improvement, suggesting that the score evolution in the game is highly deterministic.
+
+From a game design perspective, this regression model can be used for:
+\begin{itemize}
+    \item \textbf{Forecasting game outcomes:} Providing real-time score predictions to refine strategies.
+    \item \textbf{Reward Shaping:} Assisting in dynamic reward adjustments in reinforcement learning settings.
+    \item \textbf{Performance Evaluation:} Quantitatively assessing an agent's performance over time.
+\end{itemize}
+
+Future work may involve transforming the regression task into a classification problem by discretizing the score changes (e.g., high increase, moderate increase, or decrease) or exploring more advanced models for less deterministic scenarios.
+
+
+
 
 \section{Questions}
 \subsection*{1. Difference between Human-Controlled and Automatic Agents}
