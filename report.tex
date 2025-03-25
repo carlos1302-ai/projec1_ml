@@ -11,6 +11,9 @@
 \geometry{a4paper, margin=1in}
 \onehalfspacing
 
+\usepackage{etoolbox} % Allows modification of existing commands
+\preto{\section}{\clearpage} % Inserts a page break before every section
+
 \title{Assignment 1: Classification and Prediction\\[1ex]
 Machine Learning I\\
 Course 2023-2024}
@@ -40,63 +43,49 @@ In this project we apply machine learning techniques to the classical Snake game
 
 The project follows an iterative approach, where initial experiments and feature extractions are refined based on the performance of both classification and regression models. In addition, techniques such as instance pruning are applied to improve data quality by removing undesirable actions taken during manual gameplay.
 
+
+
 \newpage
-
-
 \section{Phase 1: Instances Collection}
 
-In this initial phase, the primary objective was to create a feature extraction method capable of generating ARFF files suitable for use in Weka. 
-This involved modifying the existing function \texttt{printLineData()}, which we renamed to \texttt{get\_arff\_instance()} to fulfill the following three requirements:
+In this phase, our main goal was to develop a feature extraction method that produces ARFF files compatible with Weka. To do this, we modified the original \texttt{printLineData()} function, renaming it to \texttt{get\_arff\_instance()}, to satisfy the following requirements:
 
 \begin{enumerate}
-    \item Generate ARFF files that Weka can successfully load by carefully defining attribute names, types, and structures.
-    \item Ensure each instance in the ARFF file clearly describes the game state with relevant attributes, followed by the snake's executed action as the class attribute.
-    \item Provide support to later include additional information related to future ticks, specifically the current and next tick scores, anticipating the regression tasks in subsequent phases.
+    \item Generate ARFF files that Weka can load correctly by carefully defining attribute names, types, and structures.
+    \item Ensure that each instance in the ARFF file clearly represents the game state with its corresponding attributes, along with the snake's executed action as the class attribute.
+    \item Lay the groundwork for future regression tasks by including support for additional information (e.g., current and next tick scores).
 \end{enumerate}
 
-This process had to be done multiple times, as the initial feature set was refined based on the performance of the classification models in Phase 2.
-Although multiple iterations of this function were created we will analyse only two of them.
+This process was repeated several times as we refined the initial feature set based on the performance of our classification models in Phase 2. Although we experimented with multiple iterations of the function, this report focuses on two main versions.
 
-The general structure and purpose of the function remains the same as in the previous assigments, but the attributes extracted and the way they are processed have been modified to better suit the classification (and later regression) task.
+The overall structure and purpose of the function remain similar to previous assignments, but we modified the attributes extracted and the processing methods to better suit our classification (and later regression) tasks.
 
 \subsection{Feature Extraction and ARFF Instance Generation}
 
-In the implemented function, \texttt{get\_arff\_instance()}, collects key features describing the game state. The extracted attributes are:
+The \texttt{get\_arff\_instance()} function collects key features that describe the game state. The extracted attributes include:
 
 \begin{itemize}
     \item \textbf{Snake and Food Positions}: Numeric coordinates (\texttt{head\_x, head\_y}) for the snake's head, and (\texttt{food\_x, food\_y}) for the food.
-
-    \item \textbf{Directional Indicators}: Numeric attributes (\texttt{food\_left, food\_right, food\_up, food\_down}), indicating whether the food is positioned to the left, right, above, or below the snake’s head and the distance to the food in that direction (only positive values).
-
-    \item \textbf{Adjacent Cell Occupancy Flags}: Four nominal (binary) attributes (\texttt{left\_occ, up\_occ, right\_occ, down\_occ}), indicating if the adjacent cells around the snake’s head are occupied by obstacles (body segments or walls).
-
-    \item \textbf{Game Score and Manhattan Distance (Optional)}: Initially included, attributes such as the numeric game score and Manhattan distance between snake and food are computed, though these attributes were later excluded from the classification task and reserved for future phases involving prediction.
-
-    \item \textbf{Distance to nearest obstacle (Only in the second iteration)}: The distance to the nearest obstacle in each of the four directions is calculated and included as numeric attributes in the ARFF file.
-
-    \item \textbf{Class Attribute}: The snake’s executed action (\texttt{direction}) is stored as a nominal attribute with values \{\texttt{UP}, \texttt{DOWN}, \texttt{LEFT}, \texttt{RIGHT}\}.
+    \item \textbf{Directional Indicators}: Numeric attributes (\texttt{food\_left, food\_right, food\_up, food\_down}) that indicate the relative position of the food to the snake's head by providing the distance (in positive values) in each cardinal direction.
+    \item \textbf{Adjacent Cell Occupancy Flags}: Four binary nominal attributes (\texttt{left\_occ, up\_occ, right\_occ, down\_occ}) that specify whether the cells adjacent to the snake’s head are occupied by obstacles (body segments or walls).
+    \item \textbf{Game Score and Manhattan Distance (Optional)}: Initially, we included numeric attributes for the game score and the Manhattan distance between the snake and the food. These were later set aside for regression tasks in future phases.
+    \item \textbf{Distance to Nearest Obstacle (Second Iteration Only)}: In the second version of the function, we computed and included the distance to the nearest obstacle in each of the four directions.
+    \item \textbf{Class Attribute}: The snake’s executed action (\texttt{direction}) is stored as a nominal attribute with possible values \{\texttt{UP}, \texttt{DOWN}, \texttt{LEFT}, \texttt{RIGHT}\}.
 \end{itemize}
 
-We can find the code for the first iteration of the function in the Appendix~\autoref{sec:feature-extraction}.
+The code for the first iteration of the function is provided in Appendix~\autoref{sec:feature-extraction}. This implementation ensures that every instance is consistently structured, allowing for seamless integration with Weka’s algorithms.
 
-This implementation ensures each instance is structured consistently, allowing seamless integration with Weka’s algorithms.
-
-The original main set of features (without the distance to the nearest obstacle) was the one we settled on for the final classification model, as it provided the best balance between performance and complexity. 
-Once we moved onto the third phase, when we integrated the model into the game, we found that the main problem was the snake enclosing itself, and the extended set of features (with the distance to the nearest obstacle) provided a better performance in this regard.
-We will delve deeper into this in the next sections.
-
+While the original main set of features (without the distance to the nearest obstacle) was ultimately chosen for the final classification model—thanks to its balance between performance and complexity—we found that when integrating the model into the game in Phase 3, the extended set (with obstacle distances) helped address the snake's tendency to enclose itself. We will discuss this further in the following sections.
 
 \subsection{ARFF File Generation}
 
-For the header of the ARFF file, we made it that when the logs are flushed, the function checks if the file already exists. If it does not, it writes the header with the updated attributes. This ensures that the ARFF file is correctly formatted and ready for Weka processing.
-And that we don't rewrite the header every time we flush the logs or start a new game.
-We can find the code for the function in the Appendix~\autoref{sec:arff-logging}.
+For generating the ARFF file header, the logging function first checks if the file exists. If it does not, the function writes the header with the updated attributes. This approach guarantees that the ARFF file is properly formatted for Weka processing and prevents rewriting the header every time the logs are flushed or a new game begins. The relevant code can be found in Appendix~\autoref{sec:arff-logging}.
 
-The header explicitly defines attribute names and types, matching the format expected by Weka, while the data section sequentially appends the collected instances.
+Here, the header explicitly defines the attribute names and types, in line with Weka’s requirements, while the data section sequentially appends the collected instances.
 
 \subsection{Preparing for Future Tick Information}
 
-An important requirement was anticipating future regression tasks—specifically predicting the next tick’s score. The current design simplifies extending the instance format: the code structure readily accommodates adding further attributes (like next-tick scores). A future extension could easily append the score in the next tick as follows:
+An important requirement was to plan ahead for future regression tasks—specifically predicting the next tick’s score. The current design makes it easy to extend the instance format by appending new attributes. For example, the instance creation could be modified as follows:
 
 \begin{verbatim}
 instance = f"{head_x},{head_y},{food_x},{food_y}," \
@@ -105,41 +94,32 @@ instance = f"{head_x},{head_y},{food_x},{food_y}," \
            f"{score},{next_tick_score},{direction}"
 \end{verbatim}
 
-This modification would directly enable supervised regression modeling in subsequent phases, demonstrating the function's flexibility.
+This change would allow us to directly apply supervised regression models in later phases, demonstrating the function’s flexibility.
 
 \subsection{Data Collection}
 
-For this phase, we divided it into two parts for each iteration of the function. 
-In the first part, we let the $move_tutorial1$ function we implemented in the first assignment play the game, 
-and we collected the instances generated by the function.
-The instances were recorded in ARFF format, capturing the game state and the executed action.
-This was done mostly in the early stages of the project, to quickly be able to test the classification performance for different feature sets.
-As manually collecting instances is time-consuming.
-Once we had a rough stimate of the performance of the different feature sets, we moved to the second part of the phase.
-In the second part, we manually played the game, and we collected the instances generated by the function.
-The collected data was then used to train and evaluate classification models in Phase 2.
+The data collection phase was divided into two parts for each iteration of the function. In the first part, the \texttt{move\_tutorial1} function (implemented in the first assignment) automatically played the game, and we collected the generated instances in ARFF format. This method enabled us to quickly assess the performance of different feature sets.
 
-\subsection{Summary:}
-The feature extraction function was iteratively refined to capture relevant attributes for the classification task. 
-We ended up with two different sets of features:
+Since manually collecting instances is time-consuming, once we had a rough estimate of the feature sets' performance, we moved on to the second part. In this stage, we manually played the game to gather additional instances, which were then used to train and evaluate the classification models in Phase 2.
 
-\textbf{Main Set:} Head and food positions, food direction indicators, adjacent cell occupancy flags, and the executed action.
+\subsection{Summary}
 
-\textbf{Extended Set:} The main set plus distances to the nearest obstacle in each cardinal direction.
+In summary, the feature extraction function was iteratively refined to capture the most relevant attributes for the classification task. Two distinct feature sets emerged:
+
+\begin{itemize}
+    \item \textbf{Main Set:} Includes head and food positions, food direction indicators, adjacent cell occupancy flags, and the executed action.
+    \item \textbf{Extended Set:} Combines the main set with the distances to the nearest obstacle in each cardinal direction.
+\end{itemize}
 
 
+\newpage
 \section{Phase 2: Classification}
 
-Again, this phase was done intertwined with the first one, as we needed to test the performance of the different feature sets.
-In this phase, we trained and evaluated classification models using the ARFF files generated in Phase 1. 
-In this section we will mainly focus on the final results of the classification models, and the impact of the different feature sets on the performance of the models.
-In this phase we won't delve into analysing the $Extended Set$ of features, as we will do that in the next phase, and will just focus on the $Main Set$ of features and different sets that didn't make the final cut.
+In this phase, we trained and evaluated classification models using the ARFF files generated in Phase 1. Our focus here is on the final results obtained with the \textit{Main Set} of features (i.e., only attributes available at decision time). Although we initially experimented with different feature sets—including the \textit{Extended Set}—we will only analyze the ones that made the final cut in this section, postponing the detailed analysis of the \textit{Extended Set} to the next phase.
 
 \subsection{Data Pre-processing and Feature Selection}
 
-The dataset used for this phase was generated during Phase 1. 
-To ensure that only information available at decision time is used, we removed any attributes related to future ticks (e.g., the next tick's score). 
-The final ARFF file used for training and testing has the following structure:
+The dataset used in this phase was generated during Phase 1. To ensure that our models only use information available at the decision moment, we removed all attributes related to future ticks (e.g., the next tick's score). The final ARFF file used for training and testing has the following structure:
 
 \begin{verbatim}
 @relation snake_game-Weka
@@ -169,7 +149,7 @@ The following pre-processing steps were carried out:
     \item \textbf{Instance Pruning:} To reduce noise from suboptimal moves, instances where we as a human player made clear mistakes were pruned out of the instace set.
 \end{itemize}
 
-We later performed an statistical analysis to determine the impact of the different pre-processing steps on the performance of the models and the game performance.
+We also performed a statistical analysis to quantify the effects of these pre-processing steps on the performance of our models.
 
 \subsection{Classification Experiments}
 We experimented with several classification algorithms available in Weka, including:
@@ -180,7 +160,7 @@ We experimented with several classification algorithms available in Weka, includ
     \item \textbf{Random Forest:} An ensemble method based on multiple decision trees.
 \end{itemize}
 
-For each algorithm, models were trained on a training set (generated by manually playing the game) and evaluated on a separate testing set. The main evaluation metric was the percentage of correctly classified instances (CCI) for both training and testing datasets.
+For each algorithm, we trained the models using a training set (collected during manual gameplay) and evaluated them on a separate testing set. The primary evaluation metric was the \textit{Correctly Classified Instances (CCI)} percentage for both training and testing datasets.
 
 \subsection{Results and Analysis}
 Table~\ref{tab:results} summarizes the key performance metrics for the classifiers we evaluated. The results are expressed in terms of the \textit{Correctly Classified Instances (CCI)} percentage for both training and testing datasets.
@@ -212,15 +192,9 @@ We also must note that the Random Forest classifier has a significantly lower pe
 All the files used for the experiments are available in the submission, as well as the resulting models.
 
 
-\subsection{Phase 3: Binary Analysis}
+\subsection{Binary Analysis}
+As an additional experiment, we converted certain numeric attributes to binary. Although attributes representing the food's relative position and the occupancy of adjacent cells were stored as numeric values, they are inherently binary (i.e., taking values 0 or 1). We altered the ARFF file so that if an attribute's value was greater than 0, it was set to 1; otherwise, it remained 0. The classifiers were then retrained with this new binary data, and Table~\ref{tab:binary} shows the resulting performance.
 
-Another test we tried to see if the performances changed was change the data type of the attributes from numeric to binary.
-As we described before, we 8 attributes that correspond to the position of the food relative to the snake, and the occupancy of the adjacent cells.
-Even if the data type of this attributes is numeric, they are binary in nature, as they can only take the values 0 or 1.
-We decided to change the data type of this attributes to binary, and see if the performance of the models changed.
-To do this we simply changed the data type of the attributes in the ARFF file from numeric to binary, and if at each instance the value was greater than 0 we set it to 1, and if it was 0 we set it to 0.
-We then trained the models with this new data, and evaluated the performance of the models.
-The results are shown in Table~\ref{tab:binary}.
 \begin{table}[ht]
 \centering
 \caption{Classification Performance Comparison with Binary Attributes}
@@ -261,13 +235,14 @@ The experiments highlighted several real-world observations:
 Overall, these observations directly influenced our final model selection and integration strategy for the automatic agent.
 
 
+\newpage
 \section{Phase 3: Building an Automatic Agent}
 
 In this phase, our objective is to integrate the previously generated classification model with the Snake game so that the agent can autonomously decide its next move based on the current game state. This automatic agent replaces manual control (via keyboard input) and improves upon the baseline heuristic agent developed in Tutorial 1.
 
 \subsection{Integration with Weka}
 
-To achieve this, we use the \texttt{wekaI.py} interface. The following steps were taken to connect the game with the machine learning model:
+We use the \texttt{wekaI.py} interface to connect the game with our machine learning model. The integration process involved the following steps:
 
 \begin{enumerate}
     \item \textbf{Weka Environment Setup:}
@@ -387,8 +362,7 @@ All the following results were obtained using the binary attributes, and the cle
 We can clearly see that the models trained by the heuristic agent have a better performance than the models trained by the automatic agent.
 this will be further explored in the questions section.
 
-
-
+\newpage
 \section{Phase 4: Prediction}
 In this phase, we extend our experiments to predict the snake’s next game score using regression techniques. Following an approach analogous to Phase 3, we evaluate multiple regression models under different training conditions and feature sets.
 
@@ -517,7 +491,7 @@ From a game design perspective, these regression models can be applied to:
 Future work may involve transforming the regression task into a classification problem by discretizing score changes (e.g., high increase, moderate increase, or decrease) or exploring more advanced regression techniques to handle less deterministic scenarios.
 
 
-
+\newpage
 \section{Questions}
 \subsection*{1. Difference between Human-Controlled and Automatic Agents}
 The primary difference lies in the variability and suboptimality of human decisions. 
@@ -551,14 +525,54 @@ As almost all the instances would have a score drop,
 the distribution of the classes would be almost uniform, inside this attribute, not really adding any information to the model.
 
 
+\newpage
 
-
-
+\newpage
 \section{Conclusions}
-In this assignment, we successfully applied machine learning techniques to both classify the next action in a Snake game and predict future scores. Our iterative process involved careful instance collection, data pre-processing (including instance pruning), and the integration of Weka models into the game environment. While the automatic agent shows promising improvements over manual control, further work is required to handle more dynamic and complex in-game situations. The experiments conducted provided valuable insights into the advantages and challenges of applying machine learning to real-time decision-making in games.
 
-\vspace{1em}
-\noindent\textbf{Future Work:} Future research could explore more advanced reinforcement learning techniques, incorporate additional sensory attributes, and experiment with ensemble methods for both classification and regression tasks.
+In this project, we implemented and evaluated a machine learning pipeline for the Snake game, encompassing feature extraction, classification, regression, and the integration of an automatic agent. Below, we summarize our technical conclusions, broader insights, challenges faced during the practice, and personal reflections.
+
+\subsection*{Technical Conclusions}
+\begin{itemize}
+    \item \textbf{Feature Extraction and Data Preparation:}  
+    We developed a robust feature extraction method to generate ARFF files that enabled the application of Weka’s machine learning algorithms. Iterative refinement—such as converting numeric features to binary and instance pruning—proved essential in improving classification performance.
+    
+    \item \textbf{Classification vs. In-Game Performance:}  
+    Although many classifiers achieved high accuracy on static test datasets, their performance in the live game environment varied. For instance, models like Random Forest, which appeared promising in isolation, underperformed in the dynamic setting due to overfitting and an inability to capture the spatial “big picture” of the game.
+    
+    \item \textbf{Regression Insights:}  
+    Our regression experiments revealed that the current score is a strong predictor for the next tick's score. Incorporating food directional indicators provided additional nuance, although the nearly deterministic nature of score changes limited the potential for improvement.
+    
+    \item \textbf{Model Integration:}  
+    Integrating the machine learning models with the game through Weka and the Python interface was successful but highlighted the importance of careful system setup and real-time decision-making considerations.
+\end{itemize}
+
+\subsection*{General Insights and Broader Applications}
+\begin{itemize}
+    \item \textbf{Practical Utility:}  
+    The obtained models can serve as a foundation for autonomous game agents and be adapted for real-time decision-making tasks in other interactive environments. Beyond gaming, similar techniques could be applied to robotics, autonomous navigation, and even predictive maintenance in industrial settings.
+    
+    \item \textbf{Interdisciplinary Opportunities:}  
+    This practice underscored the potential of machine learning in diverse domains—from dynamic system control to real-time data analytics—where decisions must be made rapidly based on evolving state information.
+    
+    \item \textbf{Model Limitations:}  
+    Our experiments reveal that while high classification accuracy is achievable, it does not automatically translate to robust performance in complex, dynamic systems. Future work might explore reinforcement learning or richer feature sets to better capture the spatial-temporal context of the environment.
+\end{itemize}
+
+\subsection*{Challenges and Problems Encountered}
+\begin{itemize}
+    \item \textbf{Overfitting:}  
+    Some models, notably Random Forest, exhibited overfitting, which complicated the translation of classification performance into effective in-game behavior.
+    
+    \item \textbf{Integration Issues:}  
+    Setting up the Weka environment and ensuring seamless communication between Python and the Java Virtual Machine posed non-trivial challenges.
+    
+    \item \textbf{Data Collection and Cleaning:}  
+    Gathering quality data was time-consuming. The process required extensive manual review to remove noisy instances and improve model generalization.
+\end{itemize}
+
+\subsection*{Personal Reflections}
+It was a fun project to work on.
 
 
 \newpage
