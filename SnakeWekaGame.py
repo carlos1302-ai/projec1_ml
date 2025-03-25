@@ -85,16 +85,17 @@ log_buffer = []
 
 def get_arff_instance(game):
     """
-    Returns a string in ARFF format representing the current game state.
+    Returns a string in ARFF format representing the current game state,
+    including distances to the nearest obstacle in the four cardinal directions.
     """
     head_x, head_y = game.snake_pos
     food_x, food_y = game.food_pos
 
-    # Compute distances to the food (only positive differences, otherwise 0)
-    food_left  = head_x - food_x if food_x < head_x else 0
-    food_right = food_x - head_x if food_x > head_x else 0
-    food_up    = head_y - food_y if food_y < head_y else 0
-    food_down  = food_y - head_y if food_y > head_y else 0
+    # Compute food direction indicators (binary)
+    food_left  = 1 if food_x < head_x else 0
+    food_right = 1 if food_x > head_x else 0
+    food_up    = 1 if food_y < head_y else 0
+    food_down  = 1 if food_y > head_y else 0
 
     # Check occupancy for adjacent cells
     def occupied(cell):
@@ -131,8 +132,37 @@ def get_arff_instance(game):
     else:
         next_score = score - 1
 
-    instance = f"{head_x},{head_y},{food_x},{food_y},{food_left},{food_up},{food_right},{food_down},{left_occ},{up_occ},{right_occ},{down_occ},{score},{next_head},{manhattan_distance},{direction}"
+    # New helper: compute distance to obstacle in a given direction
+    def distance_in_direction(dx, dy):
+        distance = 0
+        current = [head_x, head_y]
+        while True:
+            current[0] += dx
+            current[1] += dy
+            distance += 10  # step size
+            # Check for wall collision
+            if current[0] < 0 or current[0] >= FRAME_SIZE_X or current[1] < 0 or current[1] >= FRAME_SIZE_Y:
+                break
+            # Check for collision with snake body (exclude tail, similar to occupied())
+            if current in game.snake_body and current != game.snake_body[-1]:
+                break
+        return distance
+
+    # Compute distances in each cardinal direction
+    dist_left = distance_in_direction(-10, 0)
+    dist_up = distance_in_direction(0, -10)
+    dist_right = distance_in_direction(10, 0)
+    dist_down = distance_in_direction(0, 10)
+
+    # Append the new obstacle distance parameters to the ARFF instance.
+    instance = f"{head_x},{head_y},{food_x},{food_y}," \
+               f"{food_left},{food_up},{food_right},{food_down}," \
+               f"{left_occ},{up_occ},{right_occ},{down_occ}," \
+               f"{score},{next_score},{manhattan_distance}," \
+               f"{dist_left},{dist_up},{dist_right},{dist_down},"\
+                f"{direction}"
     return instance
+
 
 # Modified flush_logs() with the updated ARFF header.
 def flush_logs():
@@ -152,15 +182,18 @@ def flush_logs():
 @attribute food_up numeric
 @attribute food_right numeric
 @attribute food_down numeric
-@attribute left_occ {0,1}
-@attribute up_occ {0,1}
-@attribute right_occ {0,1}
-@attribute down_occ {0,1}
+@attribute left_occ numeric
+@attribute up_occ numeric
+@attribute right_occ numeric
+@attribute down_occ numeric
 @attribute score numeric
 @attribute next_score numeric
 @attribute manhattan_distance numeric
+@attribute dist_left numeric
+@attribute dist_up numeric
+@attribute dist_right numeric
+@attribute dist_down numeric
 @attribute direction {UP,DOWN,LEFT,RIGHT}
-
 @data
 """
         with open(filename, "w") as f:
@@ -479,7 +512,7 @@ while True:
     # Uncomment the next line to use the AI move function.
     x = get_instance_attributes(game)
     #print("X:", x)
-    weka_direction = weka.predict("./Final_models/heuristic_trained/j48.model", x, "./Arffs/tutorial_pruned_cleaned.arff")
+    weka_direction = weka.predict("./Final_models/binary/j48.model", x, "./Arffs/noiceless_binary_pruned.arff")
     #print(weka_direction)
     game.direction = weka_direction
     #game.direction = move_tutorial_1(game)

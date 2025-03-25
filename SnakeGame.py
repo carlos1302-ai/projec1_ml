@@ -137,7 +137,7 @@ def flush_logs():
 atexit.register(flush_logs)
 
 # DIFFICULTY settings (frames per second)
-DIFFICULTY = 8
+DIFFICULTY = 0
 
 # Game board dimensions
 FRAME_SIZE_X = 420
